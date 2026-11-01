@@ -1,0 +1,26 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Claranet PoC</title>
+<style>:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2430;--mute:#5b6575;--acc:#FE763C;--line:#d9dde3}
+@media (prefers-color-scheme:dark){:root{--bg:#14171c;--card:#1d2128;--ink:#e8ebf0;--mute:#9aa3b2;--line:#323844}}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+form{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:28px;width:min(380px,calc(100vw - 32px));box-sizing:border-box}
+h1{font-size:20px;margin:0 0 6px}p{color:var(--mute);margin:0 0 18px;font-size:14px}
+input{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+button{margin-top:12px;width:100%;padding:10px;border:0;border-radius:8px;background:var(--acc);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+#e{color:#c0392b;font-size:14px;margin-top:10px;min-height:1em}</style></head><body>
+<form id="f"><h1>Claranet proof of concept</h1><p>Prepared by IdeaHelix for Claranet. Enter the password sent by IdeaHelix.</p>
+<input id="p" type="password" autocomplete="current-password" aria-label="Password" autofocus><button>Open</button><div id="e" role="alert"></div></form>
+<script>const SALT='F/pPBw5SUaqIxlAUYESi7g==',IT=250000,SHIM="<script>(()=>{const K=crypto.subtle.importKey('raw',Uint8Array.from(atob('%KEY%'),c=>c.charCodeAt(0)),'AES-GCM',false,['decrypt']);\nconst of=window.fetch.bind(window);const cache={};const rel=u=>typeof u==='string'&&u&&!/^(blob:|data:|https?:|\\/\\/)/.test(u);\nconst ver=()=>{const m=document.querySelector('meta[name=omx-ver]');return m?m.content:''};\nconst dec=u=>cache[u]||(cache[u]=of(u+'.enc?v='+ver()).then(r=>{if(!r.ok)throw new Error(u);return r.arrayBuffer()}).then(async b=>{const p=await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(b,0,12)},await K,new Uint8Array(b,12));return p}));\nconst typ=u=>/\\.mp4$/.test(u)?'video/mp4':/\\.jpe?g$/.test(u)?'image/jpeg':/\\.png$/.test(u)?'image/png':/\\.webp$/.test(u)?'image/webp':/\\.svg$/.test(u)?'image/svg+xml':/\\.json$/.test(u)?'application/json':'text/plain';\nconst url=u=>dec(u).then(p=>URL.createObjectURL(new Blob([p],{type:typ(u)})));window.__dec=url;\nwindow.fetch=(u,o)=>rel(u)?dec(u).then(p=>new Response(p)):of(u,o);\nfor(const [P,a] of [[HTMLMediaElement.prototype,'src'],[HTMLVideoElement.prototype,'poster'],[HTMLImageElement.prototype,'src']]){\n const d=Object.getOwnPropertyDescriptor(P,a);Object.defineProperty(P,a,{get(){return d.get.call(this)},set(u){if(!rel(u))return d.set.call(this,u);\n  this['__w'+a]=u;const media=a==='src'&&this instanceof HTMLMediaElement;if(media){this.removeAttribute('src');this.load();}\n  url(u).then(b=>{if(this['__w'+a]!==u)return;d.set.call(this,b);if(media&&this.closest('dialog[open]'))this.play().catch(()=>{});})\n  .catch(()=>{delete cache[u];if(media&&this['__w'+a]===u)this.dispatchEvent(new CustomEvent('omxfail'));});}});}\nconst bg=el=>{const m=(el.getAttribute('style')||'').match(/url\\(['\"]?([^'\")]+)['\"]?\\)/);if(m&&rel(m[1])){const u=m[1];el.style.backgroundImage='none';url(u).then(b=>el.style.backgroundImage=`url('${b}')`);}};\nconst scan=r=>{(r.querySelectorAll?r:document).querySelectorAll('[style*=\"url(\"]').forEach(bg);(r.querySelectorAll?r:document).querySelectorAll('img[src]').forEach(i=>{const s=i.getAttribute('src');if(rel(s))i.src=s;});};\nnew MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>n.nodeType===1&&(bg(n),scan(n))))).observe(document.documentElement,{childList:true,subtree:true});\ndocument.addEventListener('DOMContentLoaded',()=>scan(document));})();<\/script>";
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function key(pw){const m=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);
+ return new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt:b64(SALT),iterations:IT,hash:'SHA-256'},m,256));}
+async function open_(raw){const k=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['decrypt']);
+ const b=await (await fetch('index.html.enc?t='+Date.now(),{cache:'no-store'})).arrayBuffer();
+ const html=new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(b,0,12)},k,new Uint8Array(b,12)));
+ const s=SHIM.replace('%KEY%',btoa(String.fromCharCode(...raw)));
+ try{sessionStorage.setItem('cln-k',btoa(String.fromCharCode(...raw)))}catch(e){}
+ document.open();document.write(html.replace(/<head[^>]*>/i,m=>m+s));document.close();}
+document.getElementById('f').onsubmit=async e=>{e.preventDefault();const E=document.getElementById('e');E.textContent='Opening…';
+ try{await open_(await key(document.getElementById('p').value))}catch(x){E.textContent='That password did not work. Please check it and try again.'}};
+try{const k=sessionStorage.getItem('cln-k');if(k)open_(b64(k)).catch(()=>sessionStorage.removeItem('cln-k'))}catch(e){}
+</script></body></html>
